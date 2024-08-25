@@ -6,6 +6,7 @@ import com.globalbeveragecorp.exchange.model.Trade;
 import com.globalbeveragecorp.exchange.repository.ITradeRepository;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @AllArgsConstructor
@@ -37,13 +38,20 @@ public class StockService implements IStockService {
 
     @Override
     public double calculateVolumeWeightedStockPrice(Stock stock) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime fiveMinutesAgo = now.minusMinutes(5);
+
         List<Trade> trades = tradeRepository.getRecentTrades(stock);
+
         double totalTradePriceQuantity = 0;
         int totalQuantity = 0;
 
         for (Trade trade : trades) {
-            totalTradePriceQuantity += trade.getPrice() * trade.getQuantity();
-            totalQuantity += trade.getQuantity();
+            // Calculate for trades done in past five minutes
+            if (trade.getTimestamp().isAfter(fiveMinutesAgo)) {
+                totalTradePriceQuantity += trade.getPrice() * trade.getQuantity();
+                totalQuantity += trade.getQuantity();
+            }
         }
 
         return totalQuantity == 0 ? 0 : totalTradePriceQuantity / totalQuantity;

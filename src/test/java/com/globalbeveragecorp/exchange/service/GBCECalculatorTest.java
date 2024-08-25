@@ -13,6 +13,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,9 +51,9 @@ class GBCECalculatorTest {
         Trade aleTrade1 = Trade.builder().stock(ale).timestamp(LocalDateTime.now()).quantity(150).tradeType(TradeType.BUY).price(80).build();
         Trade ginTrade1 = Trade.builder().stock(gin).timestamp(LocalDateTime.now()).quantity(150).tradeType(TradeType.BUY).price(115).build();
 
-        when(tradeRepository.getRecentTrades(pop)).thenReturn(List.of(popTrade1, popTrade2));
-        when(tradeRepository.getRecentTrades(ale)).thenReturn(List.of(aleTrade1));
-        when(tradeRepository.getRecentTrades(gin)).thenReturn(List.of(ginTrade1));
+        when(tradeRepository.getRecentTrades(pop)).thenReturn(Arrays.asList(popTrade1, popTrade2));
+        when(tradeRepository.getRecentTrades(ale)).thenReturn(Collections.singletonList(aleTrade1));
+        when(tradeRepository.getRecentTrades(gin)).thenReturn(Collections.singletonList(ginTrade1));
 
         List<Stock> stocks = Arrays.asList(tea, pop, ale, gin, joe);
         double actualAllShareIndex = gbceCalculator.calculateAllShareIndex(stocks);
