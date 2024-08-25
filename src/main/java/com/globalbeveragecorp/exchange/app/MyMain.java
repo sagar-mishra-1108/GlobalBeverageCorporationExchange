@@ -6,6 +6,7 @@ import com.globalbeveragecorp.exchange.model.TradeType;
 import com.globalbeveragecorp.exchange.repository.StockRepository;
 import com.globalbeveragecorp.exchange.repository.TradeRepository;
 import com.globalbeveragecorp.exchange.service.*;
+import com.globalbeveragecorp.exchange.utility.Printer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,20 +43,11 @@ public class MyMain {
         tradeService.recordTrade(gin, 150, TradeType.BUY, 115);
 
         // print sample calculations
-        printData(pop, stockService, tradeService, 120);
-        printData(ale, stockService, tradeService, 80);
-        printData(gin, stockService, tradeService, 115);
+        Printer.printData(pop, stockService, tradeService, 120);
+        Printer.printData(ale, stockService, tradeService, 80);
+        Printer.printData(gin, stockService, tradeService, 115);
 
         List<Stock> stocks = Arrays.asList(tea, pop, ale, gin, joe);
         System.out.println("\nGBCE All Share index : " + gbceCalculator.calculateAllShareIndex(stocks));
-
-    }
-
-    private static void printData(Stock stock, IStockService stockService, ITradeService tradeService, int price) {
-        System.out.println("\nDividend Yield for " + stock.getSymbol() + " : " + stockService.calculateDividendYield(stock, price));
-        System.out.println("P/E Ratio for " + stock.getSymbol() + " : " + stockService.calculatePERatio(stock, price));
-        System.out.println("Recorded Trades for " + stock.getSymbol() + " : ");
-        tradeService.getTradesForStock(stock).forEach(System.out::println);
-        System.out.println("Volume Weighted Stock Price for " + stock.getSymbol() + " : " + stockService.calculateVolumeWeightedStockPrice(stock));
     }
 }

@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,20 +68,42 @@ class StockServiceTest {
     }
 
     @Test
-    void calculateVolumeWeightedStockPrice() {
-        Trade popTrade = Trade.builder().stock(pop).timestamp(LocalDateTime.now()).quantity(150).tradeType(TradeType.BUY).price(125).build();
-        Trade ginTrade = Trade.builder().stock(gin).timestamp(LocalDateTime.now()).quantity(150).tradeType(TradeType.BUY).price(115).build();
+    void testCalculateVolumeWeightedStockPrice() {
+        // Trades within the 5-minute window
+        Trade popTrade1 = Trade.builder().stock(pop).timestamp(LocalDateTime.now().minusMinutes(2)).quantity(150).tradeType(TradeType.BUY).price(125).build();
+        Trade popTrade2 = Trade.builder().stock(pop).timestamp(LocalDateTime.now().minusMinutes(3)).quantity(200).tradeType(TradeType.BUY).price(120).build();
+        Trade ginTrade1 = Trade.builder().stock(gin).timestamp(LocalDateTime.now().minusMinutes(3)).quantity(150).tradeType(TradeType.BUY).price(115).build();
 
-        when(tradeRepository.getRecentTrades(pop)).thenReturn(List.of(popTrade));
-        when(tradeRepository.getRecentTrades(gin)).thenReturn(List.of(ginTrade));
+        // Trade outside the 5-minute window
+        Trade popTrade3 = Trade.builder().stock(pop).timestamp(LocalDateTime.now().minusMinutes(8)).quantity(150).tradeType(TradeType.BUY).price(125).build();
 
-        double volumeWeightedStockPricePop = stockService.calculateVolumeWeightedStockPrice(pop);
-        double volumeWeightedStockPriceGin = stockService.calculateVolumeWeightedStockPrice(gin);
+        when(tradeRepository.getRecentTrades(pop)).thenReturn(Arrays.asList(popTrade1, popTrade2, popTrade3));
+        when(tradeRepository.getRecentTrades(gin)).thenReturn(Collections.singletonList(ginTrade1));
+
+        double actualVolumeWeightedStockPricePop = stockService.calculateVolumeWeightedStockPrice(pop);
+        double expectedVolumeWeightedStockPricePop = (double) ((125 * 150) + (120 * 200)) / (150 + 200);
+
+        double actualVolumeWeightedStockPriceGin = stockService.calculateVolumeWeightedStockPrice(gin);
+        double expectedVolumeWeightedStockPriceGin = (double) (115 * 150) / 150;
 
         verify(tradeRepository, times(1)).getRecentTrades(pop);
         verify(tradeRepository, times(1)).getRecentTrades(gin);
 
-        assertEquals(125, volumeWeightedStockPricePop);
-        assertEquals(115, volumeWeightedStockPriceGin);
+        assertEquals(expectedVolumeWeightedStockPricePop, actualVolumeWeightedStockPricePop);
+        assertEquals(expectedVolumeWeightedStockPriceGin, actualVolumeWeightedStockPriceGin);
+    }
+
+    @Test
+    void testCalculateVolumeWeightedStockPrice_NoTradesWithin5Minutes() {
+        // Trade outside the 5-minute window
+        Trade popTrade = Trade.builder().stock(pop).timestamp(LocalDateTime.now().minusMinutes(8)).quantity(150).tradeType(TradeType.BUY).price(125).build();
+
+        when(tradeRepository.getRecentTrades(pop)).thenReturn(Collections.singletonList(popTrade));
+
+        double actualVolumeWeightedStockPricePop = stockService.calculateVolumeWeightedStockPrice(pop);
+
+        verify(tradeRepository, times(1)).getRecentTrades(pop);
+
+        assertEquals(0, actualVolumeWeightedStockPricePop);
     }
 }
